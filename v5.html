@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Check: Rimpa</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ff4757;
+            --secondary: #2ed573;
+            --bg: #ffe2e2;
+            --text: #2f3542;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--bg);
+            font-family: 'Nunito', sans-serif;
+            overflow: hidden;
+            flex-direction: column;
+            user-select: none; /* Prevents text selection while holding */
+        }
+
+        /* 1. THE SCANNER UI */
+        #scanner-container {
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            color: var(--primary);
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .fingerprint-btn {
+            width: 120px;
+            height: 120px;
+            background: white;
+            border-radius: 50%;
+            border: 4px solid var(--primary);
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            box-shadow: 0 10px 25px rgba(255, 71, 87, 0.3);
+            margin: 20px auto;
+            transition: transform 0.1s;
+        }
+
+        .fingerprint-btn:active {
+            transform: scale(0.95);
+        }
+
+        .fingerprint-btn.scanning {
+            animation: pulse-red 1s infinite;
+        }
+
+        /* The scanning line animation */
+        .scan-line {
+            position: absolute;
+            width: 100%;
+            height: 4px;
+            background: var(--primary);
+            top: 0;
+            left: 0;
+            animation: scan 1.5s linear infinite;
+            display: none;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        .fingerprint-btn.scanning .scan-line { display: block; }
+
+        @keyframes scan {
+            0% { top: 0%; opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(255, 71, 87, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); }
+        }
+
+        /* STATUS TEXT */
+        #status-text {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #57606f;
+            min-height: 30px;
+            margin-top: 20px;
+        }
+
+        #progress-bar {
+            width: 80%;
+            height: 10px;
+            background: #dfe4ea;
+            border-radius: 10px;
+            margin: 20px auto;
+            overflow: hidden;
+            display: none;
+        }
+
+        #progress-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--primary);
+            transition: width 0.2s;
+        }
+
+        /* 2. THE FINAL REVEAL (Hidden) */
+        #final-screen {
+            display: none;
+            text-align: center;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            padding: 20px;
+            max-width: 90%;
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .big-heart { font-size: 5rem; animation: heartbeat 1.5s infinite; }
+        
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            25% { transform: scale(1.1); }
+            40% { transform: scale(1); }
+            60% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .btn-group { margin-top: 30px; position: relative; height: 100px; width: 300px; margin-left: auto; margin-right: auto;}
+        
+        button {
+            padding: 15px 40px; border: none; border-radius: 50px;
+            font-size: 1.2rem; font-weight: bold; cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            font-family: 'Nunito', sans-serif;
+        }
+        
+        .yes-btn { background: var(--primary); color: white; }
+        .no-btn { background: #a4b0be; color: white; position: absolute; right: 0; }
+
+    </style>
+</head>
+<body>
+
+    <div id="scanner-container">
+        <h1>Identity Check</h1>
+        <p>Please place your thumb below to verify it's Rimpa.</p>
+        
+        <div class="fingerprint-btn" id="scan-btn" 
+             onmousedown="startScan()" onmouseup="stopScan()" 
+             ontouchstart="startScan()" ontouchend="stopScan()">
+            👍
+            <div class="scan-line"></div>
+        </div>
+
+        <div id="progress-bar"><div id="progress-fill"></div></div>
+        <p id="status-text">Ready to scan...</p>
+    </div>
+
+    <div id="final-screen">
+        <div class="big-heart">❤️</div>
+        <h1>Access Granted!</h1>
+        <p style="font-size: 1.2rem; color: #555;">Warning: High levels of cuteness detected.</p>
+        <p style="font-size: 1.5rem; font-weight: bold; margin-top: 30px;">Rimpa, will you be my Valentine?</p>
+
+        <div class="btn-group">
+            <button class="yes-btn" onclick="sayYes()">YES!</button>
+            <button class="no-btn" id="no-btn">No</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+
+    <script>
+        let scanTimer;
+        let progress = 0;
+        const btn = document.getElementById('scan-btn');
+        const fill = document.getElementById('progress-fill');
+        const text = document.getElementById('status-text');
+        const bar = document.getElementById('progress-bar');
+        const scannerContainer = document.getElementById('scanner-container');
+        const finalScreen = document.getElementById('final-screen');
+
+        // FUNNY MESSAGES - CHANGE THESE FOR RIMPA!
+        const messages = [
+            "Initializing scan...",
+            "Verifying fingerprints...",
+            "Wait, this finger is too cute...",
+            "Analyzing sass levels... (High)",
+            "Checking for heart match...",
+            "ACCESS GRANTED!"
+        ];
+
+        function startScan() {
+            btn.classList.add('scanning');
+            bar.style.display = 'block';
+            text.innerText = messages[0];
+            progress = 0;
+
+            scanTimer = setInterval(() => {
+                progress += 2; // Speed of scan
+                fill.style.width = `${progress}%`;
+
+                // Update text based on progress
+                if (progress > 10) text.innerText = messages[1];
+                if (progress > 30) text.innerText = messages[2];
+                if (progress > 60) text.innerText = messages[3];
+                if (progress > 85) text.innerText = messages[4];
+
+                if (progress >= 100) {
+                    completeScan();
+                }
+            }, 50); // Updates every 50ms
+        }
+
+        function stopScan() {
+            // If they let go early, reset everything!
+            if (progress < 100) {
+                clearInterval(scanTimer);
+                btn.classList.remove('scanning');
+                fill.style.width = '0%';
+                text.innerText = "Scan failed! Don't let go!";
+                text.style.color = "#ff4757";
+                setTimeout(() => { text.style.color = "#57606f"; text.innerText = "Ready to scan..."; }, 1500);
+            }
+        }
+
+        function completeScan() {
+            clearInterval(scanTimer);
+            text.innerText = messages[5];
+            
+            // Explosion effect
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+
+            // Switch screens
+            setTimeout(() => {
+                scannerContainer.style.display = 'none';
+                finalScreen.style.display = 'block';
+            }, 500);
+        }
+
+        // RUNAWAY NO BUTTON
+        const noBtn = document.getElementById('no-btn');
+        const moveBtn = (e) => {
+            e.preventDefault();
+            const x = Math.random() * (window.innerWidth - 100);
+            const y = Math.random() * (window.innerHeight - 100);
+            noBtn.style.position = 'fixed';
+            noBtn.style.left = `${x}px`;
+            noBtn.style.top = `${y}px`;
+        };
+        noBtn.addEventListener('mouseover', moveBtn);
+        noBtn.addEventListener('touchstart', moveBtn);
+
+        // YES BUTTON ACTION
+        function sayYes() {
+            confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
+            document.querySelector('h1').innerText = "Yay! ❤️";
+            document.querySelector('p').innerText = "Best decision ever!";
+            document.querySelector('.btn-group').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
